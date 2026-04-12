@@ -1,0 +1,33 @@
+{
+  "name": "Oitava Betim Agenda",
+  "short_name": "Oitava Betim Agenda",
+  "description": "Sistema de reserva de espaços da igreja",
+  "start_url": "/reserva",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5750F1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-1024x1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "pt-BR",
+  "dir": "ltr"
+}
