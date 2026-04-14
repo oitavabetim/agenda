@@ -22,16 +22,12 @@ export const authConfig = {
 
       return true;
     },
-    jwt({ token, user, account }) {
+    jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
         token.image = user.image;
-      }
-      // Persist access token
-      if (account?.access_token) {
-        token.accessToken = account.access_token;
       }
       return token;
     },
@@ -41,7 +37,6 @@ export const authConfig = {
         session.user.email = token.email as string;
         session.user.name = token.name as string;
         session.user.image = token.image as string;
-        session.user.accessToken = token.accessToken as string;
       }
       return session;
     },
