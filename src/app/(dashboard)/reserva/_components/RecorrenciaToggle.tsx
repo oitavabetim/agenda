@@ -1,40 +1,31 @@
 "use client";
 
+import { Switch } from "@/components/FormElements/switch";
 import { useReservaFormContext } from "./ReservaFormContext";
 
 export function RecorrenciaToggle() {
   const {
     state: { formData, isSubmitting, errors },
-    form: { register },
     actions: { updateField },
   } = useReservaFormContext();
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-3">
-        <input
-          type="checkbox"
-          id="recorrente"
-          {...register("recorrente")}
-          disabled={isSubmitting}
-          onChange={(e) => {
-            const checked = e.target.checked;
-            updateField("recorrente", checked);
-            
-            // Limpa os campos de recorrência quando desmarcado
-            if (!checked) {
-              // Reset manual dos campos via form
-            }
-          }}
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        />
-        <label
-          htmlFor="recorrente"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
-          Programação Recorrente?
-        </label>
-      </div>
+      <Switch
+        checked={formData.recorrente}
+        onChange={(checked) => {
+          updateField("recorrente", checked);
+
+          // Limpa os campos de recorrência quando desmarcado
+          if (!checked) {
+            updateField("recorrenciaTipo", "");
+            updateField("recorrenciaDataTermino", "");
+          }
+        }}
+        withIcon
+        label="Programação Recorrente?"
+        disabled={isSubmitting}
+      />
 
       {/* Erros de recorrência (só quando marcado) */}
       {formData.recorrente && errors.recorrente && (

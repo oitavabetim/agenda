@@ -11,6 +11,33 @@ import {
 } from "@/lib/google-calendar/recurrence";
 import dayjs from "dayjs";
 
+/**
+ * Constrói descrição formatada para evento no Google Calendar.
+ * Inclui responsável, telefone e observações em formato legível
+ * para diáconos e equipe de cozinha.
+ *
+ * Função pura — sem side effects, facilmente testável.
+ */
+function buildEventDescription(params: {
+  responsavel: string;
+  telefone: string;
+  observacoes?: string;
+}): string | undefined {
+  const partes: string[] = [];
+
+  if (params.responsavel.trim()) {
+    partes.push(`Responsável: ${params.responsavel.trim()}`);
+  }
+  if (params.telefone.trim()) {
+    partes.push(`Telefone: ${params.telefone.trim()}`);
+  }
+  if (params.observacoes?.trim()) {
+    partes.push(`Observações: ${params.observacoes.trim()}`);
+  }
+
+  return partes.length > 0 ? partes.join("\n") : undefined;
+}
+
 interface CriarReservaInput extends Omit<ReservaFormData, "recorrenciaTipo"> {
   responsavelEmail: string;
   tenantId: string;
@@ -102,6 +129,13 @@ export async function criarReserva(
         };
       }
 
+      // Construir descrição antes de operação async (cheap condition before await)
+      const descricao = buildEventDescription({
+        responsavel: dados.responsavel,
+        telefone: dados.telefone,
+        observacoes: dados.observacoes,
+      });
+
       const resultado = await processarRecorrencia({
         dataInicio: dados.dataInicio,
         horarioInicio: dados.horarioInicio,
@@ -110,7 +144,7 @@ export async function criarReserva(
         dataTermino: dados.recorrenciaDataTermino!,
         espacosCalendarIds,
         summary: dados.programacao,
-        description: dados.observacoes || undefined,
+        description: descricao,
         responsibleEmail: session.user.email,
       });
 
@@ -180,13 +214,20 @@ export async function criarReserva(
       }
 
       // 7b. Criar eventos para cada espaço
+      // Construir descrição antes do loop async (cheap condition before await)
+      const descricao = buildEventDescription({
+        responsavel: dados.responsavel,
+        telefone: dados.telefone,
+        observacoes: dados.observacoes,
+      });
+
       const eventIds: string[] = [];
 
       for (const calendarId of espacosCalendarIds) {
         const evento = await createEvent({
           calendarId,
           summary: dados.programacao,
-          description: dados.observacoes || undefined,
+          description: descricao,
           startDateTime,
           endDateTime,
           responsibleEmail: session.user.email,
