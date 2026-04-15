@@ -7,6 +7,7 @@ import "jsvectormap/dist/jsvectormap.css";
 import type { Metadata, Viewport } from "next";
 import NextTopLoader from "nextjs-toploader";
 import { Providers } from "./providers";
+import { SWRegister } from "./sw-register";
 import { getCurrentTenant } from "@/lib/tenant/config";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -50,6 +51,7 @@ export default function RootLayout({
         <Providers>
           <NextTopLoader color="#5750F1" showSpinner={false} />
           {children}
+          <SWRegister />
         </Providers>
       </body>
     </html>
