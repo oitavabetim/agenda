@@ -11,6 +11,7 @@ import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { useState } from "react";
 import { LogOutIcon } from "./icons";
+import { InstallPWA } from "./install-pwa";
 
 export function UserInfo() {
   const [isOpen, setIsOpen] = useState(false);
@@ -78,7 +79,9 @@ export function UserInfo() {
 
         <hr className="border-[#E8E8E8] dark:border-dark-3" />
 
-        <div className="p-2 text-base text-[#4B5563] dark:text-dark-6">
+        <div className="p-2 text-base text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer">
+          <InstallPWA />
+
           <button
             className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-gray-2 hover:text-dark dark:hover:bg-dark-3 dark:hover:text-white"
             onClick={() => signOut({ callbackUrl: "/login" })}
