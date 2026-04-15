@@ -7,8 +7,19 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isOnDashboard = nextUrl.pathname.startsWith("/");
       const isOnAuthPage = nextUrl.pathname.startsWith("/login");
+      const isOnPrivacyPage = nextUrl.pathname.startsWith("/politica-privacidade");
+      const isOnTermsPage = nextUrl.pathname.startsWith("/termos-uso");
+      const isOnDashboard =
+        nextUrl.pathname.startsWith("/") &&
+        !isOnAuthPage &&
+        !isOnPrivacyPage &&
+        !isOnTermsPage;
+
+      // Páginas públicas não requerem autenticação
+      if (isOnPrivacyPage || isOnTermsPage) {
+        return true;
+      }
 
       // Se está na página de login e já está logado, redireciona para dashboard
       if (isOnAuthPage && isLoggedIn) {
