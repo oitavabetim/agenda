@@ -16,8 +16,8 @@ export async function checkAvailability(
     // Busca eventos no período especificado
     const response = await calendar.events.list({
       calendarId,
-      timeMin: startDateTime.toISOString(),
-      timeMax: endDateTime.toISOString(),
+      timeMin: startDateTime,
+      timeMax: endDateTime,
       singleEvents: true,
       orderBy: "startTime",
     });
@@ -51,15 +51,15 @@ export async function checkAvailability(
 export async function checkBulkAvailability(
   params: {
     calendarId: string;
-    startDateTime: Date;
-    endDateTime: Date;
+    startDateTime: string;
+    endDateTime: string;
   }[]
 ): Promise<{ available: boolean; conflicts?: Array<{ calendarId: string; date: string; conflicts: GoogleCalendarAvailability }> }> {
   const results = await Promise.all(
     params.map((check) =>
       checkAvailability(check).then((result) => ({
         calendarId: check.calendarId,
-        date: check.startDateTime.toISOString(),
+        date: check.startDateTime,
         result,
       }))
     )

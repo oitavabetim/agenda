@@ -2,14 +2,15 @@
 
 import { auth } from "@/lib/auth";
 import { validarReserva, ReservaFormData } from "@/lib/validation/reserva";
-import { getTenantConfig, getCalendarId, getEspacosDoTenant } from "@/lib/tenant/config";
-import { checkAvailability, checkBulkAvailability } from "@/lib/google-calendar/availability";
+import { getCalendarId, getEspacosDoTenant } from "@/lib/tenant/config";
+import { checkBulkAvailability } from "@/lib/google-calendar/availability";
 import { createEvent } from "@/lib/google-calendar/events";
+import { processarRecorrencia } from "@/lib/google-calendar/recurrence";
 import {
-  calcularDatasRecorrencia,
-  processarRecorrencia,
-} from "@/lib/google-calendar/recurrence";
-import dayjs from "dayjs";
+  buildBrazilDateTime,
+  extractDateFromDateTime,
+  formatDateStringForDisplay,
+} from "@/lib/utils/timezone";
 
 /**
  * Constrói descrição formatada para evento no Google Calendar.
@@ -77,7 +78,6 @@ export async function criarReserva(
     const dados = validacao.data;
 
     // 3. Obter configuração do tenant e espaços
-    const tenant = getTenantConfig(input.tenantId);
     const espacosDoTenant = getEspacosDoTenant(input.tenantId);
 
     // 4. Validar se espaços selecionados pertencem ao tenant (Vercel: authorize after validate)
@@ -104,20 +104,12 @@ export async function criarReserva(
       };
     }
 
-    // 6. Preparar data e horário
-    const dataInicio = dayjs(dados.dataInicio);
-    const [horaInicio, minutoInicio] = dados.horarioInicio
-      .split(":")
-      .map(Number);
-    const [horaFim, minutoFim] = dados.horarioFim.split(":").map(Number);
-
-    const startDateTime = dataInicio
-      .hour(horaInicio)
-      .minute(minutoInicio)
-      .second(0)
-      .toDate();
-
-    const endDateTime = dataInicio.hour(horaFim).minute(minutoFim).second(0).toDate();
+    // 6. Preparar data e horário no fuso fixo da igreja
+    const startDateTime = buildBrazilDateTime(
+      dados.dataInicio,
+      dados.horarioInicio
+    );
+    const endDateTime = buildBrazilDateTime(dados.dataInicio, dados.horarioFim);
 
     // 7. Processar reserva (simples ou recorrente)
     if (dados.recorrente) {
@@ -203,7 +195,9 @@ export async function criarReserva(
         const mensagensErro = conflitos.map((c: ConflictInfo) => {
           const espacoNome =
             calendarIdToNome.get(c.calendarId) || "Espaço desconhecido";
-          const dataFormatada = dayjs(c.date).format("DD/MM/YYYY");
+          const dataFormatada = formatDateStringForDisplay(
+            extractDateFromDateTime(c.date)
+          );
           return `${espacoNome} indisponível em ${dataFormatada}`;
         });
 

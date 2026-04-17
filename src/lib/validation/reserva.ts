@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { toDateInBrazil, getTodayInBrazil, getDayInBrazil } from "@/lib/utils/timezone";
+import {
+  addDaysToDateString,
+  formatDateStringForDisplay,
+  getDayOfWeekForDateString,
+  getTodayInBrazilDateString,
+} from "@/lib/utils/timezone";
 
 /**
  * Schema de validação para reservas (RN-01 a RN-04)
@@ -39,10 +44,8 @@ export const reservaSchema = z
   .refine(
     (data) => {
       // RN-02: Data mínima (não permitir reservas em datas anteriores ao dia atual)
-      const hoje = getTodayInBrazil();
-      hoje.setHours(0, 0, 0, 0);
-      const dataReserva = toDateInBrazil(data.dataInicio);
-      return dataReserva >= hoje;
+      const hoje = getTodayInBrazilDateString();
+      return data.dataInicio >= hoje;
     },
     {
       message: "Não é permitido reservar datas anteriores ao dia atual",
@@ -74,53 +77,33 @@ export const reservaSchema = z
       }
 
       // Usa fuso horário brasileiro (UTC-3)
-      const hoje = getTodayInBrazil();
-      const diaSemana = getDayInBrazil(hoje); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
-
-      // Converte data do formulário para fuso brasileiro
-      const dataReserva = toDateInBrazil(data.dataInicio);
-
-      // Verifica se a data é válida
-      if (isNaN(dataReserva.getTime())) {
-        return true; // Data inválida, ignora esta validação
-      }
+      const hoje = getTodayInBrazilDateString();
+      const diaSemana = getDayOfWeekForDateString(hoje);
 
       // Calcula segunda-feira da semana permitida
       const diasParaSegunda = 8 - diaSemana;
-      const dataMinimaPermitida = new Date(hoje);
-      dataMinimaPermitida.setUTCDate(hoje.getUTCDate() + diasParaSegunda);
-      dataMinimaPermitida.setUTCHours(0, 0, 0, 0); // Zera horas para comparar apenas datas
+      let dataMinimaPermitida = addDaysToDateString(hoje, diasParaSegunda);
 
       // Sexta (5) e Sábado (6): semana subsequente (+7 dias)
       if (diaSemana >= 5) {
-        dataMinimaPermitida.setUTCDate(dataMinimaPermitida.getUTCDate() + 7);
-        dataMinimaPermitida.setUTCHours(0, 0, 0, 0); // Zera horas após ajuste
+        dataMinimaPermitida = addDaysToDateString(dataMinimaPermitida, 7);
       }
 
-      return dataReserva >= dataMinimaPermitida;
+      return data.dataInicio >= dataMinimaPermitida;
     },
     (data) => {
       // Mensagem dinâmica com data específica
-      const hoje = getTodayInBrazil();
-      const diaSemana = getDayInBrazil(hoje);
+      const hoje = getTodayInBrazilDateString();
+      const diaSemana = getDayOfWeekForDateString(hoje);
       const diasParaSegunda = 8 - diaSemana;
-      const dataMinimaPermitida = new Date(hoje);
-      dataMinimaPermitida.setUTCDate(hoje.getUTCDate() + diasParaSegunda);
-      dataMinimaPermitida.setUTCHours(0, 0, 0, 0);
+      let dataMinimaPermitida = addDaysToDateString(hoje, diasParaSegunda);
 
       if (diaSemana >= 5) {
-        dataMinimaPermitida.setUTCDate(dataMinimaPermitida.getUTCDate() + 7);
-        dataMinimaPermitida.setUTCHours(0, 0, 0, 0);
+        dataMinimaPermitida = addDaysToDateString(dataMinimaPermitida, 7);
       }
 
-      // Formata data no padrão brasileiro DD/MM/YYYY
-      const dia = dataMinimaPermitida.getUTCDate().toString().padStart(2, "0");
-      const mes = (dataMinimaPermitida.getUTCMonth() + 1).toString().padStart(2, "0");
-      const ano = dataMinimaPermitida.getUTCFullYear();
-      const dataFormatada = `${dia}/${mes}/${ano}`;
-
       return {
-        message: `Agenda bloqueada para registro de eventos antes do dia ${dataFormatada}, garantindo que as equipes de diáconos e cozinha tenham tempo hábil para se organizar e melhor atender às programações.`,
+        message: `Agenda bloqueada para registro de eventos antes do dia ${formatDateStringForDisplay(dataMinimaPermitida)}, garantindo que as equipes de diáconos e cozinha tenham tempo hábil para se organizar e melhor atender às programações.`,
         path: ["dataInicio"],
       };
     }

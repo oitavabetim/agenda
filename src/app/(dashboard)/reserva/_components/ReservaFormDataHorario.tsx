@@ -1,6 +1,7 @@
 "use client";
 
 import { useReservaFormContext } from "./ReservaFormContext";
+import { getTodayInBrazilDateString } from "@/lib/utils/timezone";
 
 export function ReservaFormDataHorario() {
   const {
@@ -28,7 +29,7 @@ export function ReservaFormDataHorario() {
             id="dataInicio"
             {...register("dataInicio")}
             disabled={isSubmitting}
-            min={new Date().toISOString().split("T")[0]}
+            min={getTodayInBrazilDateString()}
             className={`mt-1 w-full rounded-lg border bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 ${
               errors.dataInicio
                 ? "border-red-500 focus:border-red-500 focus:ring-red-500"

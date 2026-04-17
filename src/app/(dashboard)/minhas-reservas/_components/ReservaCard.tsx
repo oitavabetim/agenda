@@ -4,6 +4,11 @@ import { ReservaListada } from "@/app/(dashboard)/minhas-reservas/actions";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/pt-br";
+import {
+  getBrazilDateStringFromDateTime,
+  getBrazilTimestamp,
+  getTodayInBrazilDateString,
+} from "@/lib/utils/timezone";
 
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
@@ -15,8 +20,9 @@ interface ReservaCardProps {
 
 export function ReservaCard({ reserva, onCancelClick }: ReservaCardProps) {
   const dataEvento = dayjs(reserva.data);
-  const ehPassado = dataEvento.isBefore(dayjs());
-  const ehHoje = dataEvento.isSame(dayjs(), "day");
+  const ehPassado = getBrazilTimestamp(reserva.data) < Date.now();
+  const ehHoje =
+    getBrazilDateStringFromDateTime(reserva.data) === getTodayInBrazilDateString();
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">

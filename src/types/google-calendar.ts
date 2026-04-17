@@ -41,14 +41,14 @@ export interface CreateEventParams {
   calendarId: string;
   summary: string;
   description?: string;
-  startDateTime: Date;
-  endDateTime: Date;
+  startDateTime: string;
+  endDateTime: string;
   responsibleEmail: string;
   timezone?: string;
 }
 
 export interface CheckAvailabilityParams {
   calendarId: string;
-  startDateTime: Date;
-  endDateTime: Date;
+  startDateTime: string;
+  endDateTime: string;
 }

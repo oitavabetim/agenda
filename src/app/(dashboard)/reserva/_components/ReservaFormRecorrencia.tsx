@@ -1,6 +1,7 @@
 "use client";
 
 import { useReservaFormContext } from "./ReservaFormContext";
+import { getTodayInBrazilDateString } from "@/lib/utils/timezone";
 
 export function ReservaFormRecorrencia() {
   const {
@@ -65,7 +66,7 @@ export function ReservaFormRecorrencia() {
             id="recorrenciaDataTermino"
             {...register("recorrenciaDataTermino")}
             disabled={isSubmitting}
-            min={new Date().toISOString().split("T")[0]}
+            min={getTodayInBrazilDateString()}
             onChange={(e) => {
               const value = e.target.value;
               updateField("recorrenciaDataTermino", value);

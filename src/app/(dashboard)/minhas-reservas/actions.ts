@@ -4,6 +4,11 @@ import { auth } from "@/lib/auth";
 import { listEventsByUser } from "@/lib/google-calendar/events";
 import { getTenantConfig, getEspacosDoTenant, getCalendarId } from "@/lib/tenant/config";
 import dayjs from "dayjs";
+import {
+  formatEventDateForBrazil,
+  formatEventTimeForBrazil,
+  getBrazilTimestamp,
+} from "@/lib/utils/timezone";
 
 export interface ReservaListada {
   eventId: string;
@@ -87,18 +92,15 @@ export async function listarMinhasReservas(): Promise<{
           continue;
         }
 
-        const dataDayjs = dayjs(dataInicio);
-        const fimDayjs = dayjs(dataFim);
-
         todasReservas.push({
           eventId: evento.id,
           calendarId,
           espacoNome,
           programacao: evento.summary || "Sem título",
           data: dataInicio,
-          dataFormatada: dataDayjs.format("DD/MM/YYYY"),
-          horarioInicio: dataDayjs.format("HH:mm"),
-          horarioFim: fimDayjs.format("HH:mm"),
+          dataFormatada: formatEventDateForBrazil(dataInicio),
+          horarioInicio: formatEventTimeForBrazil(dataInicio),
+          horarioFim: formatEventTimeForBrazil(dataFim),
           status: (evento.status as "confirmed" | "cancelled" | "tentative") || "confirmed",
           criadoEm: evento.created || "",
         });
@@ -107,7 +109,7 @@ export async function listarMinhasReservas(): Promise<{
 
     // Ordenar por data (mais recente primeiro)
     todasReservas.sort((a, b) => {
-      return dayjs(b.data).valueOf() - dayjs(a.data).valueOf();
+      return getBrazilTimestamp(b.data) - getBrazilTimestamp(a.data);
     });
 
     return {

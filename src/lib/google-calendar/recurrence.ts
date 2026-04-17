@@ -1,6 +1,12 @@
-import dayjs from "dayjs";
 import { checkBulkAvailability } from "./availability";
 import { createEvent } from "./events";
+import {
+  addDaysToDateString,
+  addMonthsToDateString,
+  buildBrazilDateTime,
+  extractDateFromDateTime,
+  formatDateStringForDisplay,
+} from "@/lib/utils/timezone";
 
 export type RecorrenciaTipo = "semanal" | "mensal";
 
@@ -18,37 +24,27 @@ interface RecorrenciaParams {
  */
 export function calcularDatasRecorrencia(
   params: RecorrenciaParams
-): { data: Date; inicio: Date; fim: Date }[] {
+): { data: string; inicio: string; fim: string }[] {
   const { dataInicio, horarioInicio, horarioFim, tipo, dataTermino } = params;
 
-  const datas: { data: Date; inicio: Date; fim: Date }[] = [];
+  const datas: { data: string; inicio: string; fim: string }[] = [];
+  let dataAtual = dataInicio;
 
-  let dataAtual = dayjs(dataInicio);
-  const termino = dayjs(dataTermino);
-
-  while (dataAtual.isBefore(termino) || dataAtual.isSame(termino, "day")) {
-    const [horaInicio, minutoInicio] = horarioInicio.split(":").map(Number);
-    const [horaFim, minutoFim] = horarioFim.split(":").map(Number);
-
-    const inicio = dataAtual
-      .hour(horaInicio)
-      .minute(minutoInicio)
-      .second(0)
-      .toDate();
-
-    const fim = dataAtual.hour(horaFim).minute(minutoFim).second(0).toDate();
+  while (dataAtual <= dataTermino) {
+    const inicio = buildBrazilDateTime(dataAtual, horarioInicio);
+    const fim = buildBrazilDateTime(dataAtual, horarioFim);
 
     datas.push({
-      data: dataAtual.toDate(),
+      data: dataAtual,
       inicio,
       fim,
     });
 
     // Avança para próxima data baseado no tipo de recorrência
     if (tipo === "semanal") {
-      dataAtual = dataAtual.add(1, "week");
+      dataAtual = addDaysToDateString(dataAtual, 7);
     } else if (tipo === "mensal") {
-      dataAtual = dataAtual.add(1, "month");
+      dataAtual = addMonthsToDateString(dataAtual, 1);
     }
   }
 
@@ -61,8 +57,8 @@ export function calcularDatasRecorrencia(
 export async function verificarDisponibilidadeRecorrencia(
   params: {
     calendarId: string;
-    inicio: Date;
-    fim: Date;
+    inicio: string;
+    fim: string;
   }[]
 ) {
   const checksFormatados = params.map((check) => ({
@@ -83,8 +79,8 @@ export async function criarEventosRecorrentes(
     calendarId: string;
     summary: string;
     description?: string;
-    inicio: Date;
-    fim: Date;
+    inicio: string;
+    fim: string;
     responsibleEmail: string;
   }[]
 ): Promise<string[]> {
@@ -154,7 +150,9 @@ export async function processarRecorrencia(
       // Montar mensagem de erro detalhada
       const conflitos = disponibilidade.conflicts || [];
       const mensagensErro = conflitos.map((c) => {
-        const dataFormatada = dayjs(c.date).format("DD/MM/YYYY");
+        const dataFormatada = formatDateStringForDisplay(
+          extractDateFromDateTime(c.date)
+        );
         return `Espaço ${c.calendarId} indisponível em ${dataFormatada}`;
       });
 
@@ -168,7 +166,7 @@ export async function processarRecorrencia(
     const eventosParaCriar = datas.flatMap((data) =>
       espacosCalendarIds.map((calendarId) => ({
         calendarId,
-        summary: `${summary} (${dayjs(data.data).format("DD/MM/YYYY")})`,
+        summary: `${summary} (${formatDateStringForDisplay(data.data)})`,
         description,
         inicio: data.inicio,
         fim: data.fim,
@@ -201,7 +199,9 @@ export function formatarErroRecorrencia(conflitos: Array<{
   if (conflitos.length === 0) return "";
 
   const agrupados = conflitos.reduce((acc, conflito) => {
-    const data = dayjs(conflito.date).format("DD/MM/YYYY");
+    const data = formatDateStringForDisplay(
+      extractDateFromDateTime(conflito.date)
+    );
     if (!acc[data]) {
       acc[data] = [];
     }

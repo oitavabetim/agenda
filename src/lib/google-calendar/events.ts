@@ -1,5 +1,6 @@
 import { getCalendarClient } from ".";
 import { CreateEventParams, GoogleCalendarEvent } from "@/types/google-calendar";
+import { BRAZIL_TIMEZONE } from "@/lib/utils/timezone";
 
 /**
  * Cria um evento no Google Calendar com propriedades customizadas
@@ -15,7 +16,7 @@ export async function createEvent(
     startDateTime,
     endDateTime,
     responsibleEmail,
-    timezone = "America/Sao_Paulo",
+    timezone = BRAZIL_TIMEZONE,
   } = params;
 
   try {
@@ -25,11 +26,11 @@ export async function createEvent(
       summary,
       description: description || "",
       start: {
-        dateTime: startDateTime.toISOString(),
+        dateTime: startDateTime,
         timeZone: timezone,
       },
       end: {
-        dateTime: endDateTime.toISOString(),
+        dateTime: endDateTime,
         timeZone: timezone,
       },
       extendedProperties: {
