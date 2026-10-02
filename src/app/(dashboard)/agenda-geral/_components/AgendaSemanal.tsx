@@ -74,6 +74,16 @@ function formatWeekRange(weekStart: string): string {
   return `${formatDate(weekStart)} a ${formatDate(weekEnd)}`;
 }
 
+function formatDayHeader(day: string, long = false): string {
+  const [year, month, date] = day.split("-").map(Number);
+  return new Intl.DateTimeFormat("pt-BR", {
+    weekday: long ? "long" : "short",
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, date)));
+}
+
 function getTimedSegments(
   events: AgendaGeralEvento[],
   day: string,
@@ -183,6 +193,24 @@ function EventCard({ segment }: { segment: TimedSegment }) {
   );
 }
 
+function MobileEventCard({ event }: { event: AgendaGeralEvento }) {
+  const horario = event.diaInteiro
+    ? "Dia inteiro"
+    : `${formatTime(event.inicio)}–${formatTime(event.fim)}`;
+
+  return (
+    <article className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
+      <p className="font-medium text-blue-950 dark:text-blue-100">
+        {event.titulo}
+      </p>
+      <p className="mt-1 text-sm text-blue-800 dark:text-blue-200">
+        {event.espacoNome}
+      </p>
+      <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">{horario}</p>
+    </article>
+  );
+}
+
 export function AgendaSemanal({
   initialWeekStart,
   initialEvents,
@@ -239,6 +267,19 @@ export function AgendaSemanal({
         days.map((day) => [day, layOutOverlaps(getTimedSegments(events, day))]),
       ),
     [days, events],
+  );
+  const mobileEventsByDay = useMemo(
+    () =>
+      new Map(
+        days.map((day) => [
+          day,
+          [
+            ...(allDayByDay.get(day) || []),
+            ...(timedByDay.get(day) || []).map((segment) => segment.event),
+          ],
+        ]),
+      ),
+    [allDayByDay, days, timedByDay],
   );
 
   return (
@@ -304,98 +345,127 @@ export function AgendaSemanal({
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="min-w-[980px]">
-            <div className="grid grid-cols-[4rem_repeat(7,minmax(8rem,1fr))] border-b border-gray-200 dark:border-gray-700">
-              <div className="border-r border-gray-200 dark:border-gray-700" />
-              {days.map((day) => {
-                const [year, month, date] = day.split("-").map(Number);
-                const header = new Intl.DateTimeFormat("pt-BR", {
-                  weekday: "short",
-                  day: "2-digit",
-                  month: "2-digit",
-                  timeZone: "UTC",
-                }).format(new Date(Date.UTC(year, month - 1, date)));
+        <>
+          <div className="space-y-3 md:hidden">
+            {days.map((day) => {
+              const dayEvents = mobileEventsByDay.get(day) || [];
 
-                return (
-                  <div
-                    key={day}
-                    className={`border-r p-3 text-center text-sm font-medium last:border-r-0 dark:border-gray-700 ${
-                      day === today
-                        ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
-                        : "text-gray-700 dark:text-gray-200"
-                    }`}
-                  >
-                    {header}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="grid grid-cols-[4rem_repeat(7,minmax(8rem,1fr))] border-b border-gray-200 dark:border-gray-700">
-              <div className="border-r p-2 text-xs font-medium text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                Dia inteiro
-              </div>
-              {days.map((day) => (
-                <div
+              return (
+                <section
                   key={day}
-                  className="min-h-12 border-r p-1 last:border-r-0 dark:border-gray-700"
-                >
-                  {(allDayByDay.get(day) || []).map((event) => (
-                    <div
-                      key={`${event.id}-${day}`}
-                      className="mb-1 rounded bg-blue-100 px-2 py-1 text-xs text-blue-950 dark:bg-blue-900/50 dark:text-blue-100"
-                      title={`${event.titulo} — ${event.espacoNome}`}
-                    >
-                      <p className="truncate font-semibold">{event.titulo}</p>
-                      <p className="truncate">{event.espacoNome}</p>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-[4rem_repeat(7,minmax(8rem,1fr))]">
-              <div className="relative h-[1088px] border-r dark:border-gray-700">
-                {HOUR_LABELS.map((hour) => (
-                  <span
-                    key={hour}
-                    className="absolute -translate-y-1/2 px-2 text-xs text-gray-500 dark:text-gray-400"
-                    style={{
-                      top: `${((hour - START_HOUR) / (END_HOUR - START_HOUR)) * 100}%`,
-                    }}
-                  >
-                    {String(hour).padStart(2, "0")}:00
-                  </span>
-                ))}
-              </div>
-              {days.map((day) => (
-                <div
-                  key={day}
-                  className={`relative h-[1088px] overflow-hidden border-r last:border-r-0 dark:border-gray-700 ${
-                    day === today ? "bg-blue-50/40 dark:bg-blue-900/10" : ""
+                  className={`rounded-lg border p-4 ${
+                    day === today
+                      ? "border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20"
+                      : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-dark"
                   }`}
                 >
-                  {HOUR_LABELS.map((hour) => (
+                  <h3 className="font-semibold capitalize text-gray-900 dark:text-white">
+                    {formatDayHeader(day, true)}
+                  </h3>
+                  {dayEvents.length === 0 ? (
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                      Sem reservas.
+                    </p>
+                  ) : (
+                    <div className="mt-3 space-y-2">
+                      {dayEvents.map((event) => (
+                        <MobileEventCard
+                          key={`${event.id}-${day}`}
+                          event={event}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 md:block">
+            <div className="min-w-[980px]">
+              <div className="grid grid-cols-[4rem_repeat(7,minmax(8rem,1fr))] border-b border-gray-200 dark:border-gray-700">
+                <div className="border-r border-gray-200 dark:border-gray-700" />
+                {days.map((day) => {
+                  return (
                     <div
+                      key={day}
+                      className={`border-r p-3 text-center text-sm font-medium last:border-r-0 dark:border-gray-700 ${
+                        day === today
+                          ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+                          : "text-gray-700 dark:text-gray-200"
+                      }`}
+                    >
+                      {formatDayHeader(day)}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="grid grid-cols-[4rem_repeat(7,minmax(8rem,1fr))] border-b border-gray-200 dark:border-gray-700">
+                <div className="border-r p-2 text-xs font-medium text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                  Dia inteiro
+                </div>
+                {days.map((day) => (
+                  <div
+                    key={day}
+                    className="min-h-12 border-r p-1 last:border-r-0 dark:border-gray-700"
+                  >
+                    {(allDayByDay.get(day) || []).map((event) => (
+                      <div
+                        key={`${event.id}-${day}`}
+                        className="mb-1 rounded bg-blue-100 px-2 py-1 text-xs text-blue-950 dark:bg-blue-900/50 dark:text-blue-100"
+                        title={`${event.titulo} — ${event.espacoNome}`}
+                      >
+                        <p className="truncate font-semibold">{event.titulo}</p>
+                        <p className="truncate">{event.espacoNome}</p>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-[4rem_repeat(7,minmax(8rem,1fr))]">
+                <div className="relative h-[1088px] border-r dark:border-gray-700">
+                  {HOUR_LABELS.map((hour) => (
+                    <span
                       key={hour}
-                      className="absolute left-0 right-0 border-t border-gray-100 dark:border-gray-800"
+                      className="absolute -translate-y-1/2 px-2 text-xs text-gray-500 dark:text-gray-400"
                       style={{
                         top: `${((hour - START_HOUR) / (END_HOUR - START_HOUR)) * 100}%`,
                       }}
-                    />
-                  ))}
-                  {(timedByDay.get(day) || []).map((segment) => (
-                    <EventCard
-                      key={`${segment.event.id}-${day}`}
-                      segment={segment}
-                    />
+                    >
+                      {String(hour).padStart(2, "0")}:00
+                    </span>
                   ))}
                 </div>
-              ))}
+                {days.map((day) => (
+                  <div
+                    key={day}
+                    className={`relative h-[1088px] overflow-hidden border-r last:border-r-0 dark:border-gray-700 ${
+                      day === today ? "bg-blue-50/40 dark:bg-blue-900/10" : ""
+                    }`}
+                  >
+                    {HOUR_LABELS.map((hour) => (
+                      <div
+                        key={hour}
+                        className="absolute left-0 right-0 border-t border-gray-100 dark:border-gray-800"
+                        style={{
+                          top: `${((hour - START_HOUR) / (END_HOUR - START_HOUR)) * 100}%`,
+                        }}
+                      />
+                    ))}
+                    {(timedByDay.get(day) || []).map((segment) => (
+                      <EventCard
+                        key={`${segment.event.id}-${day}`}
+                        segment={segment}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {isPending ? (
