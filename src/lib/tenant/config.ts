@@ -22,7 +22,6 @@ export const TENANTS: Record<string, TenantConfig> = {
     name: "Oitava Betim Agenda",
     googleClientId: process.env.GOOGLE_CLIENT_ID || "",
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    calendarIframeUrl: process.env.CALENDAR_IFRAME_URL ||"https://calendar.google.com/calendar/embed?src=example%40group.calendar.google.com",
     mapaUrl: process.env.MAPA_URL || "/images/mapas/mapa-oitava-betim.jpg",
     onesignalAppId: process.env.ONESIGNAL_APP_ID,
     onesignalRestApiKey: process.env.ONESIGNAL_REST_API_KEY,
@@ -154,10 +153,7 @@ export const getEspacosDoTenant = (tenantId?: string): EspacoConfig[] => {
  * Obtém o calendarId de um espaço específico do tenant
  * Substitui getCalendarIdByEspacoId() hardcoded
  */
-export const getCalendarId = (
-  tenantId: string,
-  espacoId: string
-): string => {
+export const getCalendarId = (tenantId: string, espacoId: string): string => {
   const tenant = TENANTS[tenantId];
   if (!tenant) return "";
   const espaco = tenant.espacos.find((e) => e.id === espacoId);

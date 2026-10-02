@@ -112,8 +112,6 @@ CALENDAR_ID_SALA_05=
 CALENDAR_ID_SALA_07=
 CALENDAR_ID_SALA_APOIO=
 
-# URL do iframe da agenda geral (Google Calendar público)
-NEXT_PUBLIC_CALENDAR_IFRAME_URL=https://calendar.google.com/calendar/embed?src=SEU_CALENDAR_ID
 ```
 
 > **Gerar NEXTAUTH_SECRET:** Execute `openssl rand -base64 32` no terminal
@@ -129,7 +127,6 @@ export const TENANTS: Record<string, TenantConfig> = {
     name: "Igreja São Paulo", // ← Nome da sua igreja
     googleClientId: process.env.GOOGLE_CLIENT_ID || "",
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    calendarIframeUrl: process.env.NEXT_PUBLIC_CALENDAR_IFRAME_URL || "",
     mapaUrl: process.env.MAPA_URL || "/images/mapas/mapa-sao-paulo.jpg",
     espacos: [
       {

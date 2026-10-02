@@ -156,9 +156,10 @@ Ações:
 
 #### RF-08 – Tela Visualizar Agenda Geral
 
-- Tela simples
-- Incorporação de **iframe do Google Calendar**
-- URL do iframe definida via variável de ambiente
+- Visualização semanal própria, de segunda a domingo
+- Navegação entre semanas e retorno à semana atual
+- Eventos consultados pela Google Calendar API com Service Account
+- Exibir título, espaço e horário, sem detalhes pessoais da reserva
 
 ---
 
@@ -180,7 +181,6 @@ A aplicação deve suportar múltiplas unidades, com configuração isolada por 
 - Credenciais Google OAuth
 - Chaves Google Calendar
 - IDs das agendas
-- Iframe da agenda geral
 - Configuração de espaços
 - Configuração do OneSignal
 
@@ -286,4 +286,3 @@ Mensagem padrão:
 - Nenhuma reserva parcial é criada
 - Usuário consegue listar e cancelar suas próprias reservas
 - Sistema reduz conflitos operacionais da igreja
-

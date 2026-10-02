@@ -24,8 +24,7 @@ export interface TenantConfig {
   name: string;
   googleClientId: string;
   googleClientSecret: string;
-  calendarIframeUrl: string;
-  mapaUrl: string;  // URL do mapa da igreja (ex: "/images/mapas/mapa-oitava.jpg")
+  mapaUrl: string; // URL do mapa da igreja (ex: "/images/mapas/mapa-oitava.jpg")
   onesignalAppId?: string;
   onesignalRestApiKey?: string;
   espacos: EspacoConfig[]; // ← AGORA: espaços são parte do tenant
@@ -66,9 +65,7 @@ export function TenantProvider({
 export function useTenant() {
   const context = use(TenantContext);
   if (context === undefined) {
-    throw new Error(
-      "useTenant deve ser usado dentro de um TenantProvider"
-    );
+    throw new Error("useTenant deve ser usado dentro de um TenantProvider");
   }
   return context;
 }

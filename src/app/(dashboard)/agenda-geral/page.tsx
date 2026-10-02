@@ -1,14 +1,18 @@
 import { Metadata } from "next";
-import { CalendarIframe } from "./_components/CalendarIframe";
 import { getCurrentTenant } from "@/lib/tenant/config";
+import { getInicioSemanaAtual } from "@/lib/google-calendar/agenda";
+import { AgendaSemanal } from "./_components/AgendaSemanal";
+import { listarAgendaGeralSemana } from "./actions";
 
 export const metadata: Metadata = {
   title: "Agenda Geral",
   description: "Visualize a agenda geral de espaços da igreja",
 };
 
-export default function AgendaGeralPage() {
+export default async function AgendaGeralPage() {
   const tenant = getCurrentTenant();
+  const inicioSemana = getInicioSemanaAtual();
+  const result = await listarAgendaGeralSemana(inicioSemana);
 
   return (
     <div className="max-w-full">
@@ -57,17 +61,12 @@ export default function AgendaGeralPage() {
         </div>
       </div>
 
-      {/* Calendário Iframe */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-1 dark:border-gray-700 dark:bg-gray-dark dark:shadow-card">
-        <CalendarIframe height="700px" />
-      </div>
-
-      {/* Instruções */}
-      <div className="mt-4 text-center text-xs text-gray-500 dark:text-gray-400">
-        <p>
-          Dica: Use os controles do Google Calendar para navegar entre meses,
-          mudar a visualização (dia, semana, mês) e ver detalhes dos eventos.
-        </p>
+        <AgendaSemanal
+          initialWeekStart={inicioSemana}
+          initialEvents={result.events || []}
+          initialError={result.success ? undefined : result.error}
+        />
       </div>
     </div>
   );

@@ -24,7 +24,7 @@ Sistema completo para reserva de espaços de igrejas, desenvolvido com **Next.js
 - 📱 **PWA** — Aplicação instalável em dispositivos móveis
 - 🏢 **Multi-Tenant** — Espaços configuráveis por igreja/deploy, nome dinâmico por tenant
 - 📋 **Minhas Reservas** — Listagem de reservas do usuário com cancelamento
-- 🗓️ **Agenda Geral** — Visualização consolidada via iframe do Google Calendar
+- 🗓️ **Agenda Geral** — Visualização semanal consolidada via Google Calendar API
 - 🎨 **Responsivo + Dark Mode** — Funciona em desktop, tablet e celular com suporte a tema escuro
 - ⏳ **Loading States** — Feedback visual durante operações com spinner e botão desabilitado
 
@@ -132,7 +132,7 @@ oitava-igreja-agenda/
 │   │   ├── (dashboard)/              # Grupo: rotas do dashboard
 │   │   │   ├── reserva/              # Formulário de reserva
 │   │   │   ├── minhas-reservas/      # Lista de reservas do usuário
-│   │   │   ├── agenda-geral/         # Iframe do Google Calendar
+│   │   │   ├── agenda-geral/         # Agenda semanal via Service Account
 │   │   │   ├── layout.tsx
 │   │   │   ├── loading.tsx
 │   │   │   └── page.tsx              # Redireciona para /reserva

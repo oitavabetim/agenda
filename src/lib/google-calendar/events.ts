@@ -1,13 +1,29 @@
 import { getCalendarClient } from ".";
-import { CreateEventParams, GoogleCalendarEvent } from "@/types/google-calendar";
+import {
+  CreateEventParams,
+  GoogleCalendarEvent,
+} from "@/types/google-calendar";
 import { BRAZIL_TIMEZONE } from "@/lib/utils/timezone";
+
+export interface CalendarAgendaSourceEvent {
+  id: string;
+  summary: string;
+  start: {
+    dateTime?: string;
+    date?: string;
+  };
+  end: {
+    dateTime?: string;
+    date?: string;
+  };
+}
 
 /**
  * Cria um evento no Google Calendar com propriedades customizadas
  * RF-06: Propriedades customizadas (email do responsável)
  */
 export async function createEvent(
-  params: CreateEventParams
+  params: CreateEventParams,
 ): Promise<GoogleCalendarEvent> {
   const {
     calendarId,
@@ -68,7 +84,7 @@ export async function createEvent(
  */
 export async function deleteEvent(
   calendarId: string,
-  eventId: string
+  eventId: string,
 ): Promise<void> {
   try {
     const calendar = getCalendarClient();
@@ -94,7 +110,7 @@ export async function listEventsByUser(
     timeMin?: Date;
     timeMax?: Date;
     maxResults?: number;
-  }
+  },
 ): Promise<GoogleCalendarEvent[]> {
   try {
     const calendar = getCalendarClient();
@@ -130,7 +146,7 @@ export async function listEventsByUser(
     return (events as CalendarEventItem[])
       .filter(
         (event) =>
-          event.extendedProperties?.private?.responsibleEmail === userEmail
+          event.extendedProperties?.private?.responsibleEmail === userEmail,
       )
       .map(
         (event) =>
@@ -144,7 +160,7 @@ export async function listEventsByUser(
             created: event.created || "",
             updated: event.updated || "",
             status: event.status,
-          }) as GoogleCalendarEvent
+          }) as GoogleCalendarEvent,
       );
   } catch (error) {
     console.error("Erro ao listar eventos:", error);
@@ -161,7 +177,7 @@ export async function listAllEvents(
     timeMin?: Date;
     timeMax?: Date;
     maxResults?: number;
-  }
+  },
 ): Promise<GoogleCalendarEvent[]> {
   try {
     const calendar = getCalendarClient();
@@ -200,10 +216,74 @@ export async function listAllEvents(
           created: event.created || "",
           updated: event.updated || "",
           status: event.status,
-        }) as GoogleCalendarEvent
+        }) as GoogleCalendarEvent,
     );
   } catch (error) {
     console.error("Erro ao listar eventos:", error);
     return [];
+  }
+}
+
+/**
+ * Lista os eventos necessários para a Agenda Geral sem expor detalhes do evento.
+ * Diferente das listagens de reservas, falhas são propagadas para impedir uma
+ * visualização consolidada incompleta.
+ */
+export async function listAgendaEvents(
+  calendarId: string,
+  options: {
+    timeMin: Date;
+    timeMax: Date;
+  },
+): Promise<CalendarAgendaSourceEvent[]> {
+  try {
+    const calendar = getCalendarClient();
+    const events: CalendarAgendaSourceEvent[] = [];
+    let pageToken: string | undefined;
+
+    do {
+      const response = await calendar.events.list({
+        calendarId,
+        timeMin: options.timeMin.toISOString(),
+        timeMax: options.timeMax.toISOString(),
+        maxResults: 250,
+        pageToken,
+        singleEvents: true,
+        orderBy: "startTime",
+      });
+
+      for (const event of response.data.items || []) {
+        if (
+          !event.id ||
+          !event.start ||
+          !event.end ||
+          (!event.start.dateTime && !event.start.date) ||
+          (!event.end.dateTime && !event.end.date) ||
+          event.status === "cancelled"
+        ) {
+          continue;
+        }
+
+        events.push({
+          id: event.id,
+          summary: event.summary || "Sem título",
+          start: {
+            dateTime: event.start.dateTime || undefined,
+            date: event.start.date || undefined,
+          },
+          end: {
+            dateTime: event.end.dateTime || undefined,
+            date: event.end.date || undefined,
+          },
+        });
+      }
+
+      pageToken = response.data.nextPageToken || undefined;
+    } while (pageToken);
+
+    return events;
+  } catch (error) {
+    console.error("Erro ao listar eventos para agenda geral:", error);
+    throw new Error("Não foi possível carregar a agenda geral");
   }
 }
