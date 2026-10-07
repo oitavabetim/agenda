@@ -26,7 +26,9 @@ export default async function ReservaPage() {
 
   // Obter tenant e espaços (síncrono, mas executamos em paralelo conceitual)
   const tenant = getCurrentTenant();
-  const espacos = getEspacosDoTenant(tenant.id);
+  const espacos = getEspacosDoTenant(tenant.id).filter(
+    (espaco) => espaco.id !== "sala-b"
+  );
 
   // Vercel: server-serialization - passar apenas campos necessários
   // Nunca passar googleClientSecret ou campos sensíveis para client components
